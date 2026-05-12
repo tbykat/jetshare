@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { Suspense, useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { Flight } from '@/lib/types'
 import { DEPARTURE_LOCATIONS } from '@/lib/departures'
@@ -8,7 +8,7 @@ import CommunityGate from '@/components/CommunityGate'
 import Navbar from '@/components/Navbar'
 import FlightCard from '@/components/FlightCard'
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams()
   const [authed, setAuthed] = useState(false)
   const [flights, setFlights] = useState<Flight[]>([])
@@ -60,7 +60,6 @@ export default function Home() {
           <p className="text-slate-500 text-sm mt-1">Browse open seats on upcoming island flights</p>
         </div>
 
-        {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-6">
           <input
             type="date"
@@ -117,5 +116,13 @@ export default function Home() {
         )}
       </main>
     </>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense>
+      <HomeContent />
+    </Suspense>
   )
 }
