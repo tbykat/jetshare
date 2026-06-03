@@ -5,6 +5,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const date = searchParams.get('date')
   const departure = searchParams.get('departure')
+  const arrival = searchParams.get('arrival')
 
   let query = supabaseAdmin
     .from('flights')
@@ -15,7 +16,8 @@ export async function GET(req: NextRequest) {
     .order('departure_time', { ascending: true })
 
   if (date) query = query.eq('departure_date', date)
-  if (departure) query = query.eq('departure_location', departure)
+  if (departure) query = query.eq('departure_fbo', departure)
+  if (arrival) query = query.eq('arrival_fbo', arrival)
 
   const { data, error } = await query
 
@@ -25,9 +27,19 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
-  const { owner_name, owner_contact, departure_location, departure_date, departure_time, available_seats, notes } = body
+  const {
+    owner_name,
+    owner_contact,
+    departure_fbo,
+    arrival_fbo,
+    departure_date,
+    departure_time,
+    available_seats,
+    cost_per_seat,
+    notes,
+  } = body
 
-  if (!owner_name || !owner_contact || !departure_location || !departure_date || !available_seats) {
+  if (!owner_name || !owner_contact || !departure_fbo || !arrival_fbo || !departure_date || !available_seats) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
@@ -36,10 +48,12 @@ export async function POST(req: NextRequest) {
     .insert({
       owner_name,
       owner_contact,
-      departure_location,
+      departure_fbo,
+      arrival_fbo,
       departure_date,
       departure_time: departure_time || null,
       available_seats: Number(available_seats),
+      cost_per_seat: cost_per_seat ? Number(cost_per_seat) : null,
       notes: notes || null,
       status: 'available',
     })

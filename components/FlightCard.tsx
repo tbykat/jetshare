@@ -21,6 +21,11 @@ function formatTime(timeStr: string | null) {
   return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 }
 
+function shortFBO(fbo: string) {
+  // Return just the ICAO code before the dash
+  return fbo.split('—')[0].trim()
+}
+
 function seatLabel(n: number) {
   return n === 1 ? '1 seat available' : `${n} seats available`
 }
@@ -33,14 +38,15 @@ export default function FlightCard({ flight, onClaimed }: { flight: Flight; onCl
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
         {/* Header strip */}
         <div className="bg-gradient-to-r from-sky-500 to-blue-600 px-5 py-4">
-          <div className="flex items-center justify-between">
-            <div className="text-white">
-              <p className="text-xs font-medium uppercase tracking-widest text-sky-100 mb-0.5">Departure</p>
-              <p className="font-semibold text-sm leading-tight">{flight.departure_location}</p>
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-white min-w-0">
+              <p className="text-xs font-medium uppercase tracking-widest text-sky-100 mb-0.5">From</p>
+              <p className="font-semibold text-sm leading-tight truncate">{flight.departure_fbo}</p>
             </div>
-            <div className="text-right text-white">
-              <div className="text-2xl mb-0.5">🏝️</div>
-              <p className="text-xs text-sky-100">Island</p>
+            <div className="text-white text-lg shrink-0">→</div>
+            <div className="text-white min-w-0 text-right">
+              <p className="text-xs font-medium uppercase tracking-widest text-sky-100 mb-0.5">To</p>
+              <p className="font-semibold text-sm leading-tight truncate">{flight.arrival_fbo}</p>
             </div>
           </div>
         </div>
@@ -58,6 +64,15 @@ export default function FlightCard({ flight, onClaimed }: { flight: Flight; onCl
               {seatLabel(flight.available_seats)}
             </span>
           </div>
+
+          {/* Cost per seat */}
+          {flight.cost_per_seat != null && flight.cost_per_seat > 0 && (
+            <div className="flex items-center gap-1.5">
+              <span className="bg-amber-50 text-amber-700 border border-amber-200 text-xs font-semibold px-2.5 py-1 rounded-full">
+                ${flight.cost_per_seat.toLocaleString()} / seat
+              </span>
+            </div>
+          )}
 
           <div className="flex items-center gap-1.5 text-slate-500 text-sm">
             <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">

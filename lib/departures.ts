@@ -1,10 +1,18 @@
-// Edit this list to match your community's actual departure airports
-export const DEPARTURE_LOCATIONS = [
-  'Miami Executive Airport (TMB)',
-  'Fort Lauderdale Executive Airport (FXE)',
-  'Palm Beach International (PBI)',
-  'Naples Airport (APF)',
-  'Opa-Locka Executive Airport (OPF)',
+// Departure FBOs — edit to add/remove departure airports
+export const DEPARTURE_FBOS = [
+  'KPDK — DeKalb-Peachtree (Chamblee)',
+  'KATL — Hartsfield-Jackson Atlanta',
+  'KFTY — Fulton County Airport',
+  'KVPC — Cartersville Airport',
+  'KLZU — Gwinnett County Airport',
 ] as const
 
-export type DepartureLocation = (typeof DEPARTURE_LOCATIONS)[number]
+// Arrival FBOs — edit to add/remove destination airports
+export const ARRIVAL_FBOS = [
+  'MYAM — Marsh Harbour',
+  'MYES — Staniel Cay',
+  'MYEF — George Town (Exuma)',
+] as const
+
+export type DepartureFBO = (typeof DEPARTURE_FBOS)[number]
+export type ArrivalFBO = (typeof ARRIVAL_FBOS)[number]

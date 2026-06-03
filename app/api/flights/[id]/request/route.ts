@@ -11,20 +11,37 @@ export async function POST(
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
-  // Atomic claim: only succeeds if flight is still available (prevents race conditions)
-  const { data: flight, error: updateError } = await supabaseAdmin
+  // Fetch current flight to check availability
+  const { data: flight, error: fetchError } = await supabaseAdmin
     .from('flights')
-    .update({ status: 'requested' })
+    .select('*')
     .eq('id', params.id)
     .eq('status', 'available')
-    .select()
     .single()
 
-  if (updateError || !flight) {
-    return NextResponse.json(
-      { error: 'This flight is no longer available.' },
-      { status: 409 }
-    )
+  if (fetchError || !flight) {
+    return NextResponse.json({ error: 'This flight is no longer available.' }, { status: 409 })
+  }
+
+  if (flight.available_seats < seats_needed) {
+    return NextResponse.json({ error: `Only ${flight.available_seats} seat(s) remaining.` }, { status: 409 })
+  }
+
+  const newSeatCount = flight.available_seats - seats_needed
+  const newStatus = newSeatCount === 0 ? 'requested' : 'available'
+
+  // Reduce seat count (atomic — only succeeds if still available)
+  const { error: updateError } = await supabaseAdmin
+    .from('flights')
+    .update({
+      available_seats: newSeatCount,
+      status: newStatus,
+    })
+    .eq('id', params.id)
+    .eq('status', 'available')
+
+  if (updateError) {
+    return NextResponse.json({ error: 'Failed to reserve seat. Please try again.' }, { status: 500 })
   }
 
   // Record the request
@@ -38,10 +55,10 @@ export async function POST(
     })
 
   if (requestError) {
-    // Roll back status if we couldn't save the request
+    // Roll back seat count if request record failed
     await supabaseAdmin
       .from('flights')
-      .update({ status: 'available' })
+      .update({ available_seats: flight.available_seats, status: 'available' })
       .eq('id', params.id)
     return NextResponse.json({ error: requestError.message }, { status: 500 })
   }
@@ -50,8 +67,11 @@ export async function POST(
   return NextResponse.json({
     owner_name: flight.owner_name,
     owner_contact: flight.owner_contact,
-    departure_location: flight.departure_location,
+    departure_fbo: flight.departure_fbo,
+    arrival_fbo: flight.arrival_fbo,
     departure_date: flight.departure_date,
     departure_time: flight.departure_time,
+    seats_reserved: seats_needed,
+    seats_remaining: newSeatCount,
   })
 }

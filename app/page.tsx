@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { Flight } from '@/lib/types'
-import { DEPARTURE_LOCATIONS } from '@/lib/departures'
+import { DEPARTURE_FBOS, ARRIVAL_FBOS } from '@/lib/departures'
 import CommunityGate from '@/components/CommunityGate'
 import Navbar from '@/components/Navbar'
 import FlightCard from '@/components/FlightCard'
@@ -15,6 +15,7 @@ function HomeContent() {
   const [loading, setLoading] = useState(true)
   const [filterDate, setFilterDate] = useState('')
   const [filterDeparture, setFilterDeparture] = useState('')
+  const [filterArrival, setFilterArrival] = useState('')
   const [justPosted, setJustPosted] = useState(false)
 
   useEffect(() => {
@@ -27,12 +28,13 @@ function HomeContent() {
     const params = new URLSearchParams()
     if (filterDate) params.set('date', filterDate)
     if (filterDeparture) params.set('departure', filterDeparture)
+    if (filterArrival) params.set('arrival', filterArrival)
 
     const res = await fetch(`/api/flights?${params}`)
     const data = await res.json()
     setFlights(Array.isArray(data) ? data : [])
     setLoading(false)
-  }, [filterDate, filterDeparture])
+  }, [filterDate, filterDeparture, filterArrival])
 
   useEffect(() => {
     if (authed) fetchFlights()
@@ -41,6 +43,8 @@ function HomeContent() {
   if (!authed) {
     return <CommunityGate onAuthenticated={() => setAuthed(true)} />
   }
+
+  const hasFilters = filterDate || filterDeparture || filterArrival
 
   return (
     <>
@@ -60,6 +64,7 @@ function HomeContent() {
           <p className="text-slate-500 text-sm mt-1">Browse open seats on upcoming island flights</p>
         </div>
 
+        {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-6">
           <input
             type="date"
@@ -72,14 +77,24 @@ function HomeContent() {
             onChange={(e) => setFilterDeparture(e.target.value)}
             className="border border-slate-300 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent bg-white"
           >
-            <option value="">All airports</option>
-            {DEPARTURE_LOCATIONS.map((loc) => (
+            <option value="">All departures</option>
+            {DEPARTURE_FBOS.map((loc) => (
               <option key={loc} value={loc}>{loc}</option>
             ))}
           </select>
-          {(filterDate || filterDeparture) && (
+          <select
+            value={filterArrival}
+            onChange={(e) => setFilterArrival(e.target.value)}
+            className="border border-slate-300 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent bg-white"
+          >
+            <option value="">All arrivals</option>
+            {ARRIVAL_FBOS.map((loc) => (
+              <option key={loc} value={loc}>{loc}</option>
+            ))}
+          </select>
+          {hasFilters && (
             <button
-              onClick={() => { setFilterDate(''); setFilterDeparture('') }}
+              onClick={() => { setFilterDate(''); setFilterDeparture(''); setFilterArrival('') }}
               className="text-slate-500 hover:text-slate-700 text-sm px-3 py-2 rounded-xl border border-slate-300 bg-white"
             >
               Clear filters
@@ -98,9 +113,7 @@ function HomeContent() {
             <div className="text-5xl mb-4">✈️</div>
             <p className="text-slate-700 font-semibold text-lg">No flights available</p>
             <p className="text-slate-400 text-sm mt-1">
-              {filterDate || filterDeparture
-                ? 'Try clearing your filters'
-                : 'Be the first to post a flight with open seats'}
+              {hasFilters ? 'Try clearing your filters' : 'Be the first to post a flight with open seats'}
             </p>
           </div>
         ) : (
