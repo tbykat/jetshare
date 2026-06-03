@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { createServerClient } from '@supabase/ssr'
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+})
 
 function getSupabaseUser(request: NextRequest) {
   return createServerClient(
@@ -30,12 +36,10 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  // Get authenticated requester
   const supabase = getSupabaseUser(req)
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Get requester's profile
   const { data: requesterProfile } = await supabaseAdmin
     .from('profiles')
     .select('name, email')
@@ -47,7 +51,6 @@ export async function POST(
   const { seats_needed, notes } = await req.json()
   if (!seats_needed) return NextResponse.json({ error: 'Missing seats_needed' }, { status: 400 })
 
-  // Get flight
   const { data: flight, error: fetchError } = await supabaseAdmin
     .from('flights')
     .select('*')
@@ -59,7 +62,6 @@ export async function POST(
     return NextResponse.json({ error: 'This flight is no longer available.' }, { status: 409 })
   }
 
-  // Get owner profile separately
   const { data: ownerProfile } = await supabaseAdmin
     .from('profiles')
     .select('name, email')
@@ -70,7 +72,6 @@ export async function POST(
     return NextResponse.json({ error: `Only ${flight.available_seats} seat(s) remaining.` }, { status: 409 })
   }
 
-  // Prevent owner from requesting their own flight
   if (flight.user_id === user.id) {
     return NextResponse.json({ error: "You can't request your own flight." }, { status: 400 })
   }
@@ -78,7 +79,6 @@ export async function POST(
   const newSeatCount = flight.available_seats - seats_needed
   const newStatus = newSeatCount === 0 ? 'requested' : 'available'
 
-  // Reduce seats atomically
   const { error: updateError } = await supabaseAdmin
     .from('flights')
     .update({ available_seats: newSeatCount, status: newStatus })
@@ -89,7 +89,6 @@ export async function POST(
     return NextResponse.json({ error: 'Failed to reserve seat. Please try again.' }, { status: 500 })
   }
 
-  // Record the request
   await supabaseAdmin.from('seat_requests').insert({
     flight_id: params.id,
     user_id: user.id,
@@ -97,13 +96,13 @@ export async function POST(
     notes: notes || null,
   })
 
-  // Email the flight owner
+  // Send email via Gmail
   const ownerEmail = ownerProfile?.email
   const ownerName = ownerProfile?.name || 'there'
 
-  if (ownerEmail) {
-    const emailResult = await resend.emails.send({
-      from: 'JetShare <onboarding@resend.dev>',
+  if (ownerEmail && process.env.GMAIL_USER) {
+    await transporter.sendMail({
+      from: `JetShare <${process.env.GMAIL_USER}>`,
       to: ownerEmail,
       subject: `${requesterProfile.name} wants ${seats_needed} seat${seats_needed > 1 ? 's' : ''} on your flight`,
       html: `
@@ -128,8 +127,7 @@ export async function POST(
           <p style="color: #94a3b8; font-size: 13px;">— JetShare</p>
         </div>
       `,
-    }).catch((err) => { console.error('Resend error:', err) })
-    console.log('Email attempt to:', ownerEmail, 'result:', JSON.stringify(emailResult))
+    }).catch((err) => console.error('Email error:', err))
   }
 
   return NextResponse.json({
