@@ -4,23 +4,31 @@ import { Suspense, useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { Flight } from '@/lib/types'
 import { DEPARTURE_FBOS, ARRIVAL_FBOS } from '@/lib/departures'
-import CommunityGate from '@/components/CommunityGate'
 import Navbar from '@/components/Navbar'
 import FlightCard from '@/components/FlightCard'
+import { createClient } from '@/lib/supabase-browser'
 
 function HomeContent() {
   const searchParams = useSearchParams()
-  const [authed, setAuthed] = useState(false)
   const [flights, setFlights] = useState<Flight[]>([])
   const [loading, setLoading] = useState(true)
   const [filterDate, setFilterDate] = useState('')
   const [filterDeparture, setFilterDeparture] = useState('')
   const [filterArrival, setFilterArrival] = useState('')
   const [justPosted, setJustPosted] = useState(false)
+  const [userName, setUserName] = useState('')
+  const [userId, setUserId] = useState('')
 
   useEffect(() => {
-    if (sessionStorage.getItem('js_auth') === '1') setAuthed(true)
     if (searchParams.get('posted') === '1') setJustPosted(true)
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUserId(user.id)
+        supabase.from('profiles').select('name').eq('id', user.id).single()
+          .then(({ data }) => { if (data) setUserName(data.name) })
+      }
+    })
   }, [searchParams])
 
   const fetchFlights = useCallback(async () => {
@@ -36,19 +44,13 @@ function HomeContent() {
     setLoading(false)
   }, [filterDate, filterDeparture, filterArrival])
 
-  useEffect(() => {
-    if (authed) fetchFlights()
-  }, [authed, fetchFlights])
-
-  if (!authed) {
-    return <CommunityGate onAuthenticated={() => setAuthed(true)} />
-  }
+  useEffect(() => { fetchFlights() }, [fetchFlights])
 
   const hasFilters = filterDate || filterDeparture || filterArrival
 
   return (
     <>
-      <Navbar />
+      <Navbar userName={userName} />
       <main className="max-w-5xl mx-auto px-4 py-8">
         {justPosted && (
           <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl px-4 py-3 mb-6 text-sm font-medium flex items-center gap-2">
@@ -64,7 +66,6 @@ function HomeContent() {
           <p className="text-slate-500 text-sm mt-1">Browse open seats on upcoming island flights</p>
         </div>
 
-        {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-6">
           <input
             type="date"
@@ -122,6 +123,7 @@ function HomeContent() {
               <FlightCard
                 key={flight.id}
                 flight={flight}
+                currentUserId={userId}
                 onClaimed={fetchFlights}
               />
             ))}
