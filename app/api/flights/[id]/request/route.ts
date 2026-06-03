@@ -126,6 +126,7 @@ export async function POST(
 
   return NextResponse.json({
     owner_name: ownerName,
+    owner_email: ownerEmail,
     departure_fbo: flight.departure_fbo,
     arrival_fbo: flight.arrival_fbo,
     departure_date: flight.departure_date,

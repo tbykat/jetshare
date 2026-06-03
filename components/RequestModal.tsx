@@ -17,6 +17,7 @@ interface ConfirmedDetails {
   arrival_fbo: string
   departure_date: string
   owner_name: string
+  owner_email: string
 }
 
 export default function RequestModal({
@@ -70,13 +71,19 @@ export default function RequestModal({
             </div>
             <h2 className="text-xl font-bold text-slate-900 mb-1">Request sent!</h2>
             <p className="text-slate-500 text-sm mb-6">
-              <span className="font-medium text-slate-700">{confirmed.owner_name}</span> has been emailed and will reach out to confirm your seat.
+              <span className="font-medium text-slate-700">{confirmed.owner_name}</span> has been notified by email. You can also reach out to them directly below.
             </p>
 
             <div className="bg-slate-50 rounded-xl p-4 text-left space-y-1.5 mb-4 text-sm">
               <p className="text-slate-700"><span className="text-slate-400">Route:</span> {confirmed.departure_fbo} → {confirmed.arrival_fbo}</p>
               <p className="text-slate-700"><span className="text-slate-400">Date:</span> {formatDate(confirmed.departure_date)}</p>
               <p className="text-slate-700"><span className="text-slate-400">Seats:</span> {confirmed.seats_reserved}</p>
+            </div>
+
+            <div className="bg-sky-50 border border-sky-200 rounded-xl p-4 text-left mb-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-sky-400 mb-1">Owner contact</p>
+              <p className="font-semibold text-slate-900">{confirmed.owner_name}</p>
+              <p className="text-sky-700 text-sm">{confirmed.owner_email}</p>
             </div>
 
             {confirmed.seats_remaining > 0 && (
