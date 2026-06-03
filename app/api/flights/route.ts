@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
   let query = supabaseAdmin
     .from('flights')
-    .select('*, profiles!flights_user_id_fkey(name, email)')
+    .select('*')
     .eq('status', 'available')
     .gte('departure_date', new Date().toISOString().split('T')[0])
     .order('departure_date', { ascending: true })
@@ -33,19 +33,30 @@ export async function GET(req: NextRequest) {
   if (departure) query = query.eq('departure_fbo', departure)
   if (arrival) query = query.eq('arrival_fbo', arrival)
 
-  const { data, error } = await query
+  const { data: flights, error } = await query
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (!flights || flights.length === 0) return NextResponse.json([])
 
-  // Flatten profile join
-  const flights = (data || []).map((f: any) => ({
+  // Fetch profiles separately for reliability
+  const userIds = [...new Set(flights.map((f: any) => f.user_id).filter(Boolean))]
+  const { data: profiles } = await supabaseAdmin
+    .from('profiles')
+    .select('id, name, email')
+    .in('id', userIds)
+
+  const profileMap: Record<string, { name: string; email: string }> = {}
+  for (const p of profiles || []) {
+    profileMap[p.id] = { name: p.name, email: p.email }
+  }
+
+  const result = flights.map((f: any) => ({
     ...f,
-    owner_name: f.profiles?.name || 'Unknown',
-    owner_email: f.profiles?.email || '',
-    profiles: undefined,
+    owner_name: profileMap[f.user_id]?.name || 'Unknown',
+    owner_email: profileMap[f.user_id]?.email || '',
   }))
 
-  return NextResponse.json(flights)
+  return NextResponse.json(result)
 }
 
 export async function POST(req: NextRequest) {
