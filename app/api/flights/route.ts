@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
   if (!flights || flights.length === 0) return NextResponse.json([])
 
   // Fetch profiles separately for reliability
-  const userIds = [...new Set(flights.map((f: any) => f.user_id).filter(Boolean))]
+  const userIds = Array.from(new Set(flights.map((f: any) => f.user_id).filter(Boolean)))
   const profileMap: Record<string, { name: string; email: string }> = {}
 
   if (userIds.length > 0) {
