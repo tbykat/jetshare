@@ -5,6 +5,7 @@ export const DEPARTURE_FBOS = [
   'KFTY — Fulton County Airport',
   'KVPC — Cartersville Airport',
   'KLZU — Gwinnett County Airport',
+  'MYAM — Marsh Harbour',
 ] as const
 
 // Arrival FBOs — edit to add/remove destination airports
