@@ -103,7 +103,7 @@ export async function POST(
 
   if (ownerEmail) {
     await resend.emails.send({
-      from: 'JetShare <notifications@jetshare-alpha.vercel.app>',
+      from: 'JetShare <onboarding@resend.dev>',
       to: ownerEmail,
       subject: `${requesterProfile.name} wants ${seats_needed} seat${seats_needed > 1 ? 's' : ''} on your flight`,
       html: `
