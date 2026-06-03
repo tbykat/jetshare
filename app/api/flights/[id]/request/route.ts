@@ -102,7 +102,7 @@ export async function POST(
   const ownerName = ownerProfile?.name || 'there'
 
   if (ownerEmail) {
-    await resend.emails.send({
+    const emailResult = await resend.emails.send({
       from: 'JetShare <onboarding@resend.dev>',
       to: ownerEmail,
       subject: `${requesterProfile.name} wants ${seats_needed} seat${seats_needed > 1 ? 's' : ''} on your flight`,
@@ -128,7 +128,8 @@ export async function POST(
           <p style="color: #94a3b8; font-size: 13px;">— JetShare</p>
         </div>
       `,
-    }).catch(() => {})
+    }).catch((err) => { console.error('Resend error:', err) })
+    console.log('Email attempt to:', ownerEmail, 'result:', JSON.stringify(emailResult))
   }
 
   return NextResponse.json({

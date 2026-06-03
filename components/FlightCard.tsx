@@ -102,10 +102,12 @@ export default function FlightCard({ flight, currentUserId, onClaimed }: { fligh
       {showModal && (
         <RequestModal
           flight={flight}
-          onClose={() => setShowModal(false)}
-          onSuccess={() => {
+          onClose={() => {
             setShowModal(false)
             onClaimed()
+          }}
+          onSuccess={() => {
+            onClaimed() // refresh the list, but keep modal open to show confirmation
           }}
         />
       )}
