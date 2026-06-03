@@ -30,7 +30,7 @@ function seatLabel(n: number) {
   return n === 1 ? '1 seat available' : `${n} seats available`
 }
 
-export default function FlightCard({ flight, onClaimed }: { flight: Flight; onClaimed: () => void }) {
+export default function FlightCard({ flight, currentUserId, onClaimed }: { flight: Flight; currentUserId: string; onClaimed: () => void }) {
   const [showModal, setShowModal] = useState(false)
 
   return (
