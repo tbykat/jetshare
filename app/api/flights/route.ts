@@ -40,14 +40,16 @@ export async function GET(req: NextRequest) {
 
   // Fetch profiles separately for reliability
   const userIds = [...new Set(flights.map((f: any) => f.user_id).filter(Boolean))]
-  const { data: profiles } = await supabaseAdmin
-    .from('profiles')
-    .select('id, name, email')
-    .in('id', userIds)
-
   const profileMap: Record<string, { name: string; email: string }> = {}
-  for (const p of profiles || []) {
-    profileMap[p.id] = { name: p.name, email: p.email }
+
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabaseAdmin
+      .from('profiles')
+      .select('id, name, email')
+      .in('id', userIds)
+    for (const p of profiles || []) {
+      profileMap[p.id] = { name: p.name, email: p.email }
+    }
   }
 
   const result = flights.map((f: any) => ({
