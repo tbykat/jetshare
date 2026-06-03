@@ -47,10 +47,10 @@ export async function POST(
   const { seats_needed, notes } = await req.json()
   if (!seats_needed) return NextResponse.json({ error: 'Missing seats_needed' }, { status: 400 })
 
-  // Get flight + owner profile
+  // Get flight
   const { data: flight, error: fetchError } = await supabaseAdmin
     .from('flights')
-    .select('*, profiles!flights_user_id_fkey(name, email)')
+    .select('*')
     .eq('id', params.id)
     .eq('status', 'available')
     .single()
@@ -58,6 +58,13 @@ export async function POST(
   if (fetchError || !flight) {
     return NextResponse.json({ error: 'This flight is no longer available.' }, { status: 409 })
   }
+
+  // Get owner profile separately
+  const { data: ownerProfile } = await supabaseAdmin
+    .from('profiles')
+    .select('name, email')
+    .eq('id', flight.user_id)
+    .single()
 
   if (flight.available_seats < seats_needed) {
     return NextResponse.json({ error: `Only ${flight.available_seats} seat(s) remaining.` }, { status: 409 })
@@ -91,8 +98,8 @@ export async function POST(
   })
 
   // Email the flight owner
-  const ownerEmail = (flight.profiles as any)?.email
-  const ownerName = (flight.profiles as any)?.name || 'there'
+  const ownerEmail = ownerProfile?.email
+  const ownerName = ownerProfile?.name || 'there'
 
   if (ownerEmail) {
     await resend.emails.send({
