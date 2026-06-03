@@ -107,7 +107,8 @@ export default function FlightCard({ flight, currentUserId, onClaimed }: { fligh
             onClaimed()
           }}
           onSuccess={() => {
-            onClaimed() // refresh the list, but keep modal open to show confirmation
+            // Do nothing here — let the modal show the confirmation screen
+            // onClaimed() is called when user clicks Done (via onClose)
           }}
         />
       )}
