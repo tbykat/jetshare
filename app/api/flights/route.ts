@@ -21,6 +21,20 @@ export async function GET(req: NextRequest) {
   const date = searchParams.get('date')
   const departure = searchParams.get('departure')
   const arrival = searchParams.get('arrival')
+  const mine = searchParams.get('mine')
+
+  if (mine === 'true') {
+    const supabase = getSupabaseUser(req)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const { data: flights, error } = await supabaseAdmin
+      .from('flights')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('departure_date', { ascending: true })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json((flights || []).map((f: any) => ({ ...f, owner_name: '', owner_email: '' })))
+  }
 
   let query = supabaseAdmin
     .from('flights')

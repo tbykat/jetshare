@@ -29,6 +29,12 @@ export default function Navbar({ userName }: { userName?: string }) {
             </span>
           )}
           <Link
+            href="/my-flights"
+            className="text-slate-600 hover:text-slate-900 text-sm font-medium px-3 py-2 rounded-lg transition-colors hidden sm:block"
+          >
+            My flights
+          </Link>
+          <Link
             href="/post"
             className="bg-sky-500 hover:bg-sky-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
           >
