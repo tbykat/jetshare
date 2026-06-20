@@ -66,17 +66,17 @@ function HomeContent() {
           <p className="text-slate-500 text-sm mt-1">Browse open seats on upcoming island flights</p>
         </div>
 
-        <div className="flex flex-wrap gap-3 mb-6">
+        <div className="flex gap-3 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap">
           <input
             type="date"
             value={filterDate}
             onChange={(e) => setFilterDate(e.target.value)}
-            className="border border-slate-300 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent bg-white"
+            className="shrink-0 border border-slate-300 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent bg-white"
           />
           <select
             value={filterDeparture}
             onChange={(e) => setFilterDeparture(e.target.value)}
-            className="border border-slate-300 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent bg-white"
+            className="shrink-0 border border-slate-300 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent bg-white"
           >
             <option value="">All departures</option>
             {DEPARTURE_FBOS.map((loc) => (
@@ -86,7 +86,7 @@ function HomeContent() {
           <select
             value={filterArrival}
             onChange={(e) => setFilterArrival(e.target.value)}
-            className="border border-slate-300 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent bg-white"
+            className="shrink-0 border border-slate-300 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent bg-white"
           >
             <option value="">All arrivals</option>
             {ARRIVAL_FBOS.map((loc) => (
@@ -96,9 +96,9 @@ function HomeContent() {
           {hasFilters && (
             <button
               onClick={() => { setFilterDate(''); setFilterDeparture(''); setFilterArrival('') }}
-              className="text-slate-500 hover:text-slate-700 text-sm px-3 py-2 rounded-xl border border-slate-300 bg-white"
+              className="shrink-0 text-slate-500 hover:text-slate-700 text-sm px-3 py-2 rounded-xl border border-slate-300 bg-white"
             >
-              Clear filters
+              Clear
             </button>
           )}
         </div>
